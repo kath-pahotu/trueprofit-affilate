@@ -7531,6 +7531,24 @@
     (function() {
       var reveals = document.querySelectorAll('.reveal');
       if (!reveals.length) return;
+
+      // If landing with a hash, instantly reveal all sections above the target
+      // so they occupy correct layout space and the anchor doesn't drift.
+      var hash = window.location.hash;
+      if (hash) {
+        var target = document.querySelector(hash);
+        if (target) {
+          var targetTop = target.getBoundingClientRect().top + window.scrollY;
+          reveals.forEach(function(el) {
+            var elTop = el.getBoundingClientRect().top + window.scrollY;
+            if (elTop < targetTop) {
+              el.classList.add('revealed');
+              el.style.transition = 'none';
+            }
+          });
+        }
+      }
+
       function checkReveal() {
         var wh = window.innerHeight;
         reveals.forEach(function(el) {
@@ -7542,6 +7560,19 @@
       window.addEventListener('scroll', checkReveal, { passive: true });
       window.addEventListener('resize', checkReveal);
       checkReveal();
+
+      // Re-scroll to hash after all resources (images) finish loading
+      // to correct any layout shift from late-loading content above.
+      if (hash) {
+        window.addEventListener('load', function() {
+          var el = document.querySelector(hash);
+          if (el) {
+            setTimeout(function() {
+              el.scrollIntoView({ behavior: 'instant', block: 'start' });
+            }, 100);
+          }
+        });
+      }
     })();
   </script>
 
